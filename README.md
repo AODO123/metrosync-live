@@ -110,18 +110,18 @@ npm test
 
 ## Deployment
 
-The app is designed to run on any Node.js host. It uses MongoDB Atlas as the production database, so there are no local database files to manage.
+The app is designed to run on any Node.js host. It uses MongoDB Atlas as the production database, so there are no local database files to manage. It also ships as a Docker image, so it can be deployed to any container platform (Hugging Face Spaces, Render, Fly.io, Railway, etc.).
 
-### Deploying to Koyeb (free tier, WebSockets supported)
+### Deploying to Hugging Face Spaces (free, no credit card)
 
-1. Create a free account at [app.koyeb.com](https://app.koyeb.com).
-2. Click **Create App** → choose **GitHub** → select `AODO123/metrosync-live`.
-3. Koyeb reads `koyeb.yml` automatically. Under **Environment variables**, add:
+1. Create a free account at [huggingface.co](https://huggingface.co) and a new **Space** of type **Docker**.
+2. Connect it to the GitHub repo `AODO123/metrosync-live`, or push the included `Dockerfile`.
+3. In the Space **Settings → Repository secrets / Variables**, add:
    - `MONGO_URL` — your MongoDB Atlas connection string
    - `JWT_SECRET` — a strong random string
-4. Deploy. Once the build finishes, open the public URL and hit `/health`.
+4. HF builds the Docker image and serves it. Open the public URL and hit `/health`.
 
-The seed script runs once in the Koyeb build, so the stations are loaded on first start.
+The seed script runs on first start, so the stations are loaded automatically.
 
 ### Environment variables
 
