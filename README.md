@@ -110,4 +110,23 @@ npm test
 
 ## Deployment
 
-The app is designed to deploy to Render with MongoDB Atlas as the production database. Set the same environment variables (`MONGO_URL`, `JWT_SECRET`) in the Render dashboard.
+The app is designed to run on any Node.js host. It uses MongoDB Atlas as the production database, so there are no local database files to manage.
+
+### Deploying to Koyeb (free tier, WebSockets supported)
+
+1. Create a free account at [app.koyeb.com](https://app.koyeb.com).
+2. Click **Create App** → choose **GitHub** → select `AODO123/metrosync-live`.
+3. Koyeb reads `koyeb.yml` automatically. Under **Environment variables**, add:
+   - `MONGO_URL` — your MongoDB Atlas connection string
+   - `JWT_SECRET` — a strong random string
+4. Deploy. Once the build finishes, open the public URL and hit `/health`.
+
+The seed script runs once in the Koyeb build, so the stations are loaded on first start.
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `MONGO_URL` | MongoDB connection string (Atlas or local) |
+| `JWT_SECRET` | Secret used to sign admin JWTs |
+| `PORT` | Port the server listens on (default `3000`) |
