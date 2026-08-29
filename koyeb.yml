@@ -1,0 +1,27 @@
+name: metrosync-live
+services:
+  - name: web
+    instance_types:
+      - free
+    ports:
+      - port: 3000
+        protocol: http
+    routes:
+      - path: /
+    env:
+      # Set these as Secrets in the Koyeb dashboard:
+      # MONGO_URL  -> your MongoDB Atlas connection string
+      # JWT_SECRET -> a strong random string  (e.g. `openssl rand -hex 32`)
+      - name: MONGO_URL
+        value: !secret MONGO_URL
+      - name: JWT_SECRET
+        value: !secret JWT_SECRET
+      - name: PORT
+        value: "3000"
+    health_check:
+      http_get:
+        path: /health
+        port: 3000
+    build:
+      builder: NIXPACKS
+      run: npm start
