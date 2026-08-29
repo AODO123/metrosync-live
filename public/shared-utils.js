@@ -207,8 +207,8 @@ export function handleStationChange(
   return async () => {
     if (!newStationId) return;
 
-    // Leave previous station room
-    if (appState.currentStationId) {
+    // Leave previous station room (real-time only)
+    if (appState.currentStationId && socket) {
       socket.emit("leaveStation", appState.currentStationId);
     }
 
@@ -223,8 +223,10 @@ export function handleStationChange(
       if (el) el.textContent = stationName;
     });
 
-    // Tell server we joined this station
-    socket.emit("joinStation", appState.currentStationId);
+    // Tell server we joined this station (real-time only)
+    if (socket) {
+      socket.emit("joinStation", appState.currentStationId);
+    }
 
     // Load announcements for this station
     const announcements = await loadAnnouncements(
@@ -240,6 +242,9 @@ export function handleStationChange(
 
 // Setup socket event listeners
 export function setupSocketListeners(socket, announcementList, viewersText) {
+  // If real-time isn't available, there's nothing to listen on
+  if (!socket) return;
+
   // When new announcement arrives via Socket.IO
   socket.on("announcement", (a) => {
     // Only show if it's for the station we're watching

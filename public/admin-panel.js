@@ -27,8 +27,10 @@ if (!token) {
   throw new Error("Not authenticated");
 }
 
-// Connect to Socket.IO for real-time updates
-const socket = io();
+// Connect to Socket.IO for real-time updates.
+// On platforms where the Socket.IO client is not served (e.g. some
+// serverless deploys), fall back to REST-only mode so the page still works.
+const socket = typeof io !== "undefined" ? io() : null;
 
 // Get HTML elements
 const stationSelect = document.getElementById("admin-station-select");
