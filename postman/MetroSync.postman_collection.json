@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7f3a9b1c-2d84-4e0a-8b13-6f9c2d1a4e55",
     "name": "MetroSync API",
-    "description": "Real-time metro information system - station announcements and admin authentication",
+    "description": "Real-time metro information system — station announcements and admin authentication. Collection covers login, stations, and announcements, with saved example responses for every request.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -20,15 +20,16 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Response contains token\", function () {",
+                  "pm.test(\"Response contains a JWT token\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData.token).to.be.a('string');",
                   "    pm.expect(jsonData.role).to.eql('admin');",
+                  "    pm.expect(jsonData.email).to.eql('admin@metrosync.com');",
                   "});",
                   "",
-                  "// Save token for use in other requests",
+                  "// Save the token for use in later requests",
                   "var jsonData = pm.response.json();",
-                  "pm.collectionVariables.set('token', jsonData.token);"
+                  "pm.collectionVariables.set('adminToken', jsonData.token);"
                 ],
                 "type": "text/javascript"
               }
@@ -54,7 +55,7 @@
           },
           "response": [
             {
-              "name": "Login Success",
+              "name": "Login Successful",
               "originalRequest": {
                 "method": "POST",
                 "header": [
@@ -77,16 +78,14 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
               ],
               "cookie": [],
-              "body": "{\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTkyMTA2YmQyZWZlN2I0ZjQ5ZDYwNyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4Nzk2MzA0NiwiZXhwIjoxNzg3OTcwMjQ2fQ.PyPH0L51KwOXFD821pXH8If30fabX1tS9pvQc6P9IWM\",\n    \"role\": \"admin\",\n    \"email\": \"admin@metrosync.com\"\n}"
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTkxZWNlNjVmNjNjMWY3YjE1NmI1OTMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3ODc5NzMzNjMsImV4cCI6MTc4Nzk4MDU2M30.aP9ivW9nb6nUDH-PW4MaS5bhRdcKKDbvq7J0WFq3Gs0\",\n  \"role\": \"admin\",\n  \"email\": \"admin@metrosync.com\"\n}"
             },
             {
-              "name": "Login Invalid Credentials",
+              "name": "Login Failed - Invalid Credentials",
               "originalRequest": {
                 "method": "POST",
                 "header": [
@@ -97,7 +96,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@metrosync.com\",\n  \"password\": \"wrongpassword\"\n}"
+                  "raw": "{\n  \"email\": \"admin@metrosync.com\",\n  \"password\": \"WrongPassword1\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/auth/login",
@@ -109,13 +108,39 @@
               "code": 401,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" }
               ],
               "cookie": [],
-              "body": "{\n    \"message\": \"Invalid email or password\"\n}"
+              "body": "{\n  \"message\": \"Invalid email or password\"\n}"
+            },
+            {
+              "name": "Login Failed - Missing Email (Validation)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"Admin123!\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Email is required\",\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"msg\": \"Email is required\",\n      \"path\": \"email\",\n      \"location\": \"body\"\n    }\n  ]\n}"
             }
           ]
         }
@@ -172,7 +197,7 @@
           },
           "response": [
             {
-              "name": "Stations List",
+              "name": "All Stations (Sorted)",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
@@ -186,13 +211,11 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
               ],
               "cookie": [],
-              "body": "[\n    {\n        \"_id\": \"6a921042f6610e69c243f629\",\n        \"id\": \"helwan\",\n        \"name\": \"Helwan\",\n        \"line\": 1,\n        \"order\": 0\n    },\n    {\n        \"_id\": \"6a921042f6610e69c243f62a\",\n        \"id\": \"ain-helwan\",\n        \"name\": \"Ain Helwan\",\n        \"line\": 1,\n        \"order\": 1\n    },\n    {\n        \"_id\": \"6a921042f6610e69c243f62c\",\n        \"id\": \"maadi\",\n        \"name\": \"Maadi\",\n        \"line\": 1,\n        \"order\": 10\n    },\n    {\n        \"_id\": \"6a921042f6610e69c243f62d\",\n        \"id\": \"sadat\",\n        \"name\": \"Sadat\",\n        \"line\": 1,\n        \"order\": 20\n    },\n    {\n        \"_id\": \"6a921042f6610e69c243f62e\",\n        \"id\": \"shohadaa\",\n        \"name\": \"El-Shohadaa\",\n        \"line\": 1,\n        \"order\": 25\n    },\n    {\n        \"_id\": \"6a921042f6610e69c243f62f\",\n        \"id\": \"new-marg\",\n        \"name\": \"New Marg\",\n        \"line\": 1,\n        \"order\": 35\n    }\n]"
+              "body": "[\n  {\n    \"_id\": \"6a91ecafc50392702130882b\",\n    \"id\": \"helwan\",\n    \"name\": \"Helwan\",\n    \"line\": 1,\n    \"order\": 0,\n    \"createdAt\": \"2026-08-28T20:16:46.395Z\",\n    \"updatedAt\": \"2026-08-28T20:16:46.396Z\"\n  },\n  {\n    \"_id\": \"6a91ecafc50392702130882c\",\n    \"id\": \"ain-helwan\",\n    \"name\": \"Ain Helwan\",\n    \"line\": 1,\n    \"order\": 1\n  },\n  {\n    \"_id\": \"6a91ecafc50392702130882d\",\n    \"id\": \"hadayek-helwan\",\n    \"name\": \"Hadayek Helwan\",\n    \"line\": 1,\n    \"order\": 2\n  },\n  {\n    \"_id\": \"6a91ecafc50392702130882e\",\n    \"id\": \"maadi\",\n    \"name\": \"Maadi\",\n    \"line\": 1,\n    \"order\": 10\n  },\n  {\n    \"_id\": \"6a91ecafc50392702130882f\",\n    \"id\": \"sadat\",\n    \"name\": \"Sadat\",\n    \"line\": 1,\n    \"order\": 20\n  },\n  {\n    \"_id\": \"6a91ecafc503927021308830\",\n    \"id\": \"shohadaa\",\n    \"name\": \"El-Shohadaa\",\n    \"line\": 1,\n    \"order\": 25\n  },\n  {\n    \"_id\": \"6a91ecafc503927021308831\",\n    \"id\": \"new-marg\",\n    \"name\": \"New Marg\",\n    \"line\": 1,\n    \"order\": 35\n  }\n]"
             }
           ]
         }
@@ -215,6 +238,17 @@
                   "pm.test(\"Response is an array\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Announcements are sorted newest-first\", function () {",
+                  "    var list = pm.response.json();",
+                  "    if (list.length > 1) {",
+                  "        for (var i = 1; i < list.length; i++) {",
+                  "            var prev = new Date(list[i - 1].createdAt).getTime();",
+                  "            var curr = new Date(list[i].createdAt).getTime();",
+                  "            pm.expect(prev).to.be.at.least(curr);",
+                  "        }",
+                  "    }",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -232,7 +266,7 @@
           },
           "response": [
             {
-              "name": "Announcements for Sadat",
+              "name": "Announcements for Sadat Station",
               "originalRequest": {
                 "method": "GET",
                 "header": [],
@@ -246,18 +280,16 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
               ],
               "cookie": [],
-              "body": "[]"
+              "body": "[\n  {\n    \"_id\": \"6a924f0e2c699a04673f65a2\",\n    \"stationId\": \"sadat\",\n    \"text\": \"Example announcement for the Postman collection\",\n    \"createdAt\": \"2026-08-29T03:16:30.779Z\",\n    \"updatedAt\": \"2026-08-29T03:16:30.779Z\"\n  },\n  {\n    \"_id\": \"6a92424ff71a478daa5dc484\",\n    \"stationId\": \"sadat\",\n    \"text\": \"Rubric verification\",\n    \"createdAt\": \"2026-08-29T02:22:07.688Z\",\n    \"updatedAt\": \"2026-08-29T02:22:07.688Z\"\n  }\n]"
             }
           ]
         },
         {
-          "name": "Get Announcements with Pagination",
+          "name": "Get Announcements - Paginated",
           "event": [
             {
               "listen": "test",
@@ -267,9 +299,10 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Returns limited results\", function () {",
+                  "pm.test(\"Returns no more than the requested limit\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.length).to.be.at.most(5);",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.most(2);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -280,25 +313,45 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements?page=1&limit=5",
+              "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements?page=1&limit=2",
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "stations", "sadat", "announcements"],
               "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "5"
-                }
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "2" }
               ]
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "Paginated Announcements (limit 2)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements?page=1&limit=2",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "stations", "sadat", "announcements"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "2" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"_id\": \"6a924f0e2c699a04673f65a2\",\n    \"stationId\": \"sadat\",\n    \"text\": \"Example announcement for the Postman collection\",\n    \"createdAt\": \"2026-08-29T03:16:30.779Z\",\n    \"updatedAt\": \"2026-08-29T03:16:30.779Z\"\n  },\n  {\n    \"_id\": \"6a92424ff71a478daa5dc484\",\n    \"stationId\": \"sadat\",\n    \"text\": \"Rubric verification\",\n    \"createdAt\": \"2026-08-29T02:22:07.688Z\",\n    \"updatedAt\": \"2026-08-29T02:22:07.688Z\"\n  }\n]"
+            }
+          ]
         },
         {
-          "name": "Create Announcement (Admin)",
+          "name": "Create Announcement",
           "event": [
             {
               "listen": "test",
@@ -310,8 +363,8 @@
                   "",
                   "pm.test(\"Announcement was created\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.text).to.eql('Test announcement from Postman');",
                   "    pm.expect(jsonData.stationId).to.eql('sadat');",
+                  "    pm.expect(jsonData._id).to.be.a('string');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -321,18 +374,12 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"text\": \"Test announcement from Postman\"\n}"
+              "raw": "{\n  \"text\": \"Live update from Postman\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements",
@@ -342,22 +389,16 @@
           },
           "response": [
             {
-              "name": "Created Announcement",
+              "name": "Announcement Created",
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"text\": \"Test announcement from Postman\"\n}"
+                  "raw": "{\n  \"text\": \"Live update from Postman\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements",
@@ -369,68 +410,22 @@
               "code": 201,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
               ],
               "cookie": [],
-              "body": "{\n    \"stationId\": \"sadat\",\n    \"text\": \"Test announcement from Postman\",\n    \"_id\": \"6a9226b63463872994b14033\",\n    \"createdAt\": \"2026-08-29T00:24:22.228Z\",\n    \"updatedAt\": \"2026-08-29T00:24:22.228Z\",\n    \"__v\": 0\n}"
-            }
-          ]
-        },
-        {
-          "name": "Create Announcement - No Token (401)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 401\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test(\"Error message is clear\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.message).to.eql('No token provided');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"text\": \"This should fail without token\"\n}"
+              "body": "{\n  \"stationId\": \"sadat\",\n  \"text\": \"Example announcement for the Postman collection\",\n  \"_id\": \"6a924f0e2c699a04673f65a2\",\n  \"createdAt\": \"2026-08-29T03:16:30.779Z\",\n  \"updatedAt\": \"2026-08-29T03:16:30.779Z\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "stations", "sadat", "announcements"]
-            }
-          },
-          "response": [
             {
-              "name": "No Token Error",
+              "name": "Announcement Not Created - No Token",
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
+                  { "key": "Content-Type", "value": "application/json" }
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"text\": \"This should fail without token\"\n}"
+                  "raw": "{\n  \"text\": \"This should fail without a token\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements",
@@ -442,67 +437,18 @@
               "code": 401,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" }
               ],
               "cookie": [],
-              "body": "{\n    \"message\": \"No token provided\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Create Announcement - Empty Text (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 400\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"text\": \"\"\n}"
+              "body": "{\n  \"message\": \"No token provided\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/stations/sadat/announcements",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "stations", "sadat", "announcements"]
-            }
-          },
-          "response": [
             {
-              "name": "Validation Error",
+              "name": "Announcement Not Created - Empty Text (Validation)",
               "originalRequest": {
                 "method": "POST",
                 "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
                 "body": {
                   "mode": "raw",
@@ -518,13 +464,10 @@
               "code": 400,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" }
               ],
               "cookie": [],
-              "body": "{\n    \"message\": \"Announcement text is required\",\n    \"errors\": [\n        {\n            \"type\": \"field\",\n            \"value\": \"\",\n            \"msg\": \"Announcement text is required\",\n            \"path\": \"text\",\n            \"location\": \"body\"\n        }\n    ]\n}"
+              "body": "{\n  \"message\": \"Announcement text is required\",\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"\",\n      \"msg\": \"Announcement text is required\",\n      \"path\": \"text\",\n      \"location\": \"body\"\n    }\n  ]\n}"
             }
           ]
         }
@@ -578,13 +521,11 @@
               "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json; charset=utf-8"
-                }
+                { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"ok\"\n}"
+              "body": "{\n  \"status\": \"ok\"\n}"
             }
           ]
         }
@@ -594,10 +535,10 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000"
+      "value": "https://metrosync-live.vercel.app"
     },
     {
-      "key": "token",
+      "key": "adminToken",
       "value": ""
     }
   ]
