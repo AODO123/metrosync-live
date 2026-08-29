@@ -110,18 +110,18 @@ npm test
 
 ## Deployment
 
-The app is designed to run on any Node.js host. It uses MongoDB Atlas as the production database, so there are no local database files to manage. It also ships as a Docker image, so it can be deployed to any container platform (Hugging Face Spaces, Render, Fly.io, Railway, etc.).
+The app is designed to run on any Node.js host. It uses MongoDB Atlas as the production database, so there are no local database files to manage. It deploys cleanly to Vercel as a Node.js serverless function (see `vercel.json` and `api/index.js`), and the same codebase runs unchanged on any container or VM host (Render, Fly.io, Railway, Hugging Face Spaces, etc.).
 
-### Deploying to Hugging Face Spaces (free, no credit card)
+### Deploying to Vercel (free, no credit card)
 
-1. Create a free account at [huggingface.co](https://huggingface.co) and a new **Space** of type **Docker**.
-2. Connect it to the GitHub repo `AODO123/metrosync-live`, or push the included `Dockerfile`.
-3. In the Space **Settings → Repository secrets / Variables**, add:
+1. Create a free account at [vercel.com](https://vercel.com) and import the GitHub repo `AODO123/metrosync-live`.
+2. Set the root directory to the project and build command `npm install` / output as configured in `vercel.json`.
+3. In **Project Settings → Environment Variables**, add:
    - `MONGO_URL` — your MongoDB Atlas connection string
    - `JWT_SECRET` — a strong random string
-4. HF builds the Docker image and serves it. Open the public URL and hit `/health`.
+4. Deploy. Vercel builds and serves the API + static frontend. Hit `/health` to confirm.
 
-The seed script runs on first start, so the stations are loaded automatically.
+> Note: On serverless platforms the REST API and MongoDB work fully. The real-time Socket.io demo is best shown by running the app locally (`npm run dev`) or on a long-lived host, since serverless environments pause idle connections.
 
 ### Environment variables
 
